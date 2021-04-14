@@ -33,10 +33,12 @@ public class JobScheduleHelper {
     private Thread ringThread;
     private volatile boolean scheduleThreadToStop = false;
     private volatile boolean ringThreadToStop = false;
+    // 存放即将要执行的定时任务
     private volatile static Map<Integer, List<Integer>> ringData = new ConcurrentHashMap<>();
 
     public void start(){
 
+        // 定时任务线程
         // schedule thread
         scheduleThread = new Thread(new Runnable() {
             @Override
@@ -224,6 +226,7 @@ public class JobScheduleHelper {
 
                 while (!ringThreadToStop) {
 
+                    // 即保持整秒时触发任务
                     // align second
                     try {
                         TimeUnit.MILLISECONDS.sleep(1000 - System.currentTimeMillis() % 1000);
@@ -238,6 +241,7 @@ public class JobScheduleHelper {
                         List<Integer> ringItemData = new ArrayList<>();
                         int nowSecond = Calendar.getInstance().get(Calendar.SECOND);   // 避免处理耗时太长，跨过刻度，向前校验一个刻度；
                         for (int i = 0; i < 2; i++) {
+                            // nowSecond+60是为了避免0秒和1秒时的nowSecond-i负数问题
                             List<Integer> tmpData = ringData.remove( (nowSecond+60-i)%60 );
                             if (tmpData != null) {
                                 ringItemData.addAll(tmpData);

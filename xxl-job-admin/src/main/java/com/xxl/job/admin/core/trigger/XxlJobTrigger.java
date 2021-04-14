@@ -28,6 +28,9 @@ public class XxlJobTrigger {
     /**
      * trigger job
      *
+     * 看起来jobid只是为了获取任务，对后续的执行并没有太多帮助
+     * 后续的执行主要是使用logId
+     *
      * @param jobId
      * @param triggerType
      * @param failRetryCount

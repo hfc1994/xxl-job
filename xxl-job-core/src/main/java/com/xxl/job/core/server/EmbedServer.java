@@ -85,6 +85,7 @@ public class EmbedServer {
 
                     logger.info(">>>>>>>>>>> xxl-job remoting server start success, nettype = {}, port = {}", EmbedServer.class, port);
 
+                    // xxl-job（即当前执行器）向xxl-admin注册自己
                     // start registry
                     startRegistry(appname, address);
 
@@ -191,18 +192,18 @@ public class EmbedServer {
 
             // services mapping
             try {
-                if ("/beat".equals(uri)) {
+                if ("/beat".equals(uri)) {      // 心跳
                     return executorBiz.beat();
-                } else if ("/idleBeat".equals(uri)) {
+                } else if ("/idleBeat".equals(uri)) {       //@todo 根据指定jobid对应的线程是否在运行中，涉及到jobid
                     IdleBeatParam idleBeatParam = GsonTool.fromJson(requestData, IdleBeatParam.class);
                     return executorBiz.idleBeat(idleBeatParam);
-                } else if ("/run".equals(uri)) {
+                } else if ("/run".equals(uri)) {        //@todo 根据指定jobid获取线程提交任务等
                     TriggerParam triggerParam = GsonTool.fromJson(requestData, TriggerParam.class);
                     return executorBiz.run(triggerParam);
-                } else if ("/kill".equals(uri)) {
+                } else if ("/kill".equals(uri)) {     //@todo 根据指定的jobid去停止任务以及中断线程
                     KillParam killParam = GsonTool.fromJson(requestData, KillParam.class);
                     return executorBiz.kill(killParam);
-                } else if ("/log".equals(uri)) {
+                } else if ("/log".equals(uri)) {    // 读取log，只涉及logid
                     LogParam logParam = GsonTool.fromJson(requestData, LogParam.class);
                     return executorBiz.log(logParam);
                 } else {

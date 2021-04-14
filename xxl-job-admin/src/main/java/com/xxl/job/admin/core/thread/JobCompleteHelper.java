@@ -21,7 +21,7 @@ import java.util.concurrent.*;
  */
 public class JobCompleteHelper {
 	private static Logger logger = LoggerFactory.getLogger(JobCompleteHelper.class);
-	
+
 	private static JobCompleteHelper instance = new JobCompleteHelper();
 	public static JobCompleteHelper getInstance(){
 		return instance;
@@ -174,6 +174,8 @@ public class JobCompleteHelper {
 		log.setHandleTime(new Date());
 		log.setHandleCode(handleCallbackParam.getHandleCode());
 		log.setHandleMsg(handleMsg.toString());
+		// 如果有，则触发执行当前任务的所有子任务
+		// 并根据jobLog的id查询更新jobLog
 		XxlJobCompleter.updateHandleInfoAndFinish(log);
 
 		return ReturnT.SUCCESS;

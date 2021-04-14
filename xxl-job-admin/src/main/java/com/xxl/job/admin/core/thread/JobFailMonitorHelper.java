@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class JobFailMonitorHelper {
 	private static Logger logger = LoggerFactory.getLogger(JobFailMonitorHelper.class);
-	
+
 	private static JobFailMonitorHelper instance = new JobFailMonitorHelper();
 	public static JobFailMonitorHelper getInstance(){
 		return instance;
@@ -52,6 +52,7 @@ public class JobFailMonitorHelper {
 
 								// 1、fail retry monitor
 								if (log.getExecutorFailRetryCount() > 0) {
+									//@todo 为什么是log.getExecutorFailRetryCount()-1
 									JobTriggerPoolHelper.trigger(log.getJobId(), TriggerTypeEnum.RETRY, (log.getExecutorFailRetryCount()-1), log.getExecutorShardingParam(), log.getExecutorParam(), null);
 									String retryMsg = "<br><br><span style=\"color:#F39C12;\" > >>>>>>>>>>>"+ I18nUtil.getString("jobconf_trigger_type_retry") +"<<<<<<<<<<< </span><br>";
 									log.setTriggerMsg(log.getTriggerMsg() + retryMsg);

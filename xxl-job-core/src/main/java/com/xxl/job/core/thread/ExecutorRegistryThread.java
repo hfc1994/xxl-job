@@ -67,6 +67,7 @@ public class ExecutorRegistryThread {
 
                     try {
                         if (!toStop) {
+                            // 保活心跳
                             TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
                         }
                     } catch (InterruptedException e) {

@@ -10,6 +10,8 @@ import org.springframework.util.MultiValueMap;
 
 import javax.servlet.http.Cookie;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 public class JobInfoControllerTest extends AbstractSpringMvcTest {
@@ -42,6 +44,35 @@ public class JobInfoControllerTest extends AbstractSpringMvcTest {
     ).andReturn();
 
     System.out.println(ret.getResponse().getContentAsString());
+  }
+
+  @Test
+  public void testBatchJob() throws Exception {
+    MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+    parameters.add("id", "2");
+
+    for (int i=0; i<10; i++) {
+      Thread t = new Thread(() -> {
+        try {
+          MvcResult ret = mockMvc.perform(
+                  post("/jobinfo/trigger")
+                          .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                          //.content(paramsJson)
+                          .params(parameters)
+                          .cookie(cookie)
+          ).andReturn();
+
+          System.out.println(ret.getResponse().getContentAsString());
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      });
+      t.start();
+    }
+    System.out.println("--- over ---");
+
+    TimeUnit.SECONDS.sleep(30);
+
   }
 
 }

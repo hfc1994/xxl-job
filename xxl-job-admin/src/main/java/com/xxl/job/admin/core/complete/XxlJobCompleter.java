@@ -20,6 +20,9 @@ public class XxlJobCompleter {
     private static Logger logger = LoggerFactory.getLogger(XxlJobCompleter.class);
 
     /**
+     * 如果有，则触发执行当前任务的所有子任务
+     * 根据XxlJobLog的id查询，然后查看child_jobid
+     *
      * common fresh handle entrance (limit only once)
      *
      * @param xxlJobLog

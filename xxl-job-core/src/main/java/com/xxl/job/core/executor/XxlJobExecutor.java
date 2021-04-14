@@ -67,13 +67,17 @@ public class XxlJobExecutor  {
         // init logpath
         XxlJobFileAppender.initLogPath(logPath);
 
+        // 初始化服务端参数配置，也就是xxl-admin
         // init invoker, admin-client
         initAdminBizList(adminAddresses, accessToken);
 
 
+        // /data/applogs/xxl-job/jobhandler目录下的日志清理
         // init JobLogFileCleanThread
         JobLogFileCleanThread.getInstance().start(logRetentionDays);
 
+        // TriggerCallbackThread逻辑里面基本只涉及上报更新jobLog
+        // 唯一设计job的地方是根据job的id查询检查是否有child_jobid
         // init TriggerCallbackThread
         TriggerCallbackThread.getInstance().start();
 

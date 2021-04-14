@@ -123,6 +123,7 @@ public class JobThread extends Thread{
 							triggerParam.getBroadcastIndex(),
 							triggerParam.getBroadcastTotal());
 
+					// 被存放在ThreadLocal对象中
 					// init job context
 					XxlJobContext.setXxlJobContext(xxlJobContext);
 
@@ -147,6 +148,7 @@ public class JobThread extends Thread{
 							futureThread = new Thread(futureTask);
 							futureThread.start();
 
+							// 实现超时停止任务的功能，当然前提是线程能被interrupt中止的那种
 							Boolean tempResult = futureTask.get(triggerParam.getExecutorTimeout(), TimeUnit.SECONDS);
 						} catch (TimeoutException e) {
 
@@ -180,6 +182,7 @@ public class JobThread extends Thread{
 					);
 
 				} else {
+					// 没任务时，每次循环会在triggerQueue获取任务上阻塞3秒
 					if (idleTimes > 30) {
 						if(triggerQueue.size() == 0) {	// avoid concurrent trigger causes jobId-lost
 							XxlJobExecutor.removeJobThread(jobId, "excutor idel times over limit.");

@@ -54,6 +54,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
         GlueTypeEnum glueTypeEnum = GlueTypeEnum.match(triggerParam.getGlueType());
         if (GlueTypeEnum.BEAN == glueTypeEnum) {
 
+            // 出现的场景：Admin上运行了旧任务，然后删除了旧任务，创建同名新任务，最后旧任务未完成前运行新任务
             // new jobhandler
             IJobHandler newJobHandler = XxlJobExecutor.loadJobHandler(triggerParam.getExecutorHandler());
 
@@ -118,6 +119,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
             return new ReturnT<String>(ReturnT.FAIL_CODE, "glueType[" + triggerParam.getGlueType() + "] is not valid.");
         }
 
+        // 正在运行中的任务需要被再次执行时的策略，Admin配置页面上叫做“阻塞处理策略”
         // executor block strategy
         if (jobThread != null) {
             ExecutorBlockStrategyEnum blockStrategy = ExecutorBlockStrategyEnum.match(triggerParam.getExecutorBlockStrategy(), null);
@@ -140,9 +142,11 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
         // replace thread (new or exists invalid)
         if (jobThread == null) {
+            // 理论上，当有大量不同id的任务被创建时是有可能导致线程也被过量创建的
             jobThread = XxlJobExecutor.registJobThread(triggerParam.getJobId(), jobHandler, removeOldReason);
         }
 
+        // 同一个任务并发执行时，在一定策略下是会进行排队执行的
         // push data to queue
         ReturnT<String> pushResult = jobThread.pushTriggerQueue(triggerParam);
         return pushResult;

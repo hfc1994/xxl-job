@@ -71,6 +71,8 @@ public class TriggerCallbackThread {
                             int drainToNum = getInstance().callBackQueue.drainTo(callbackParamList);
                             callbackParamList.add(callback);
 
+                            // callback逻辑里面基本只涉及上报更新jobLog
+                            // 唯一设计job的地方是根据job的id查询检查是否有child_jobid
                             // callback, will retry if error
                             if (callbackParamList!=null && callbackParamList.size()>0) {
                                 doCallback(callbackParamList);
@@ -162,6 +164,7 @@ public class TriggerCallbackThread {
      */
     private void doCallback(List<HandleCallbackParam> callbackParamList){
         boolean callbackRet = false;
+        // 每个admin都尝试，其中一个callback成功就结束了
         // callback, will retry if error
         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
             try {
@@ -169,6 +172,7 @@ public class TriggerCallbackThread {
                 if (callbackResult!=null && ReturnT.SUCCESS_CODE == callbackResult.getCode()) {
                     callbackLog(callbackParamList, "<br>----------- xxl-job job callback finish.");
                     callbackRet = true;
+                    // 其中有一个admin上报成功就结束了
                     break;
                 } else {
                     callbackLog(callbackParamList, "<br>----------- xxl-job job callback fail, callbackResult:" + callbackResult);

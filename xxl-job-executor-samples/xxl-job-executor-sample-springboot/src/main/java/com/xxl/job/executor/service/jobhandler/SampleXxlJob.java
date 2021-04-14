@@ -1,10 +1,15 @@
 package com.xxl.job.executor.service.jobhandler;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.xxl.job.core.context.XxlJobHelper;
+import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -36,12 +41,27 @@ public class SampleXxlJob {
      */
     @XxlJob("demoJobHandler")
     public void demoJobHandler() throws Exception {
+        XxlJobHelper.log("----- begin -----");
         XxlJobHelper.log("XXL-JOB, Hello World.");
+        XxlJobHelper.log("Thread id = " + Thread.currentThread().getId());
 
         for (int i = 0; i < 5; i++) {
             XxlJobHelper.log("beat at:" + i);
             TimeUnit.SECONDS.sleep(2);
         }
+
+        String params = XxlJobHelper.getJobParam();
+        XxlJobHelper.log(params);
+
+        if (!StringUtils.isEmpty(params)) {
+            JsonObject json = JsonParser.parseString(params).getAsJsonObject();
+            json.entrySet().forEach(entry -> {
+                String str = "key = " + entry.getKey() + ", " + "value = " + entry.getValue();
+                XxlJobHelper.log(str);
+            });
+        }
+
+        XxlJobHelper.log("----- over -----");
         // default success
     }
 

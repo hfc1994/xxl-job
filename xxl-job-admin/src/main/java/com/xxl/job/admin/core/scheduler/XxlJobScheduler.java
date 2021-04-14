@@ -24,28 +24,35 @@ public class XxlJobScheduler  {
         // init i18n
         initI18n();
 
+        // 创建快慢两个线程池，慢线程池用于存放执行经常分发超时的job
         // admin trigger pool start
         JobTriggerPoolHelper.toStart();
 
+        // admin和job的注册相关和死亡移除相关
         // admin registry monitor run
         JobRegistryHelper.getInstance().start();
 
+        // 监控执行失败的job，如果需要则重试执行job，如果需要报警则发邮件
         // admin fail-monitor run
         JobFailMonitorHelper.getInstance().start();
 
+        // 长时间运行未结束的任务尝试去停止
+        //@todo 好像部分服务与执行器端重复
         // admin lose-monitor run ( depend on JobTriggerPoolHelper )
         JobCompleteHelper.getInstance().start();
 
+        // 统计记录job的运行状况，删除设定时间之前的joblog
         // admin log report start
         JobLogReportHelper.getInstance().start();
 
+        // 定时类job的定时执行
         // start-schedule  ( depend on JobTriggerPoolHelper )
         JobScheduleHelper.getInstance().start();
 
         logger.info(">>>>>>>>> init xxl-job admin success.");
     }
 
-    
+
     public void destroy() throws Exception {
 
         // stop-schedule
