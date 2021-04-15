@@ -15,12 +15,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by xuxueli on 17/3/1.
  */
 public class ExecutorBizImpl implements ExecutorBiz {
     private static Logger logger = LoggerFactory.getLogger(ExecutorBizImpl.class);
+
+    private ReentrantLock lock = new ReentrantLock();
 
     @Override
     public ReturnT<String> beat() {
@@ -143,7 +146,15 @@ public class ExecutorBizImpl implements ExecutorBiz {
         // replace thread (new or exists invalid)
         if (jobThread == null) {
             // 理论上，当有大量不同id的任务被创建时是有可能导致线程也被过量创建的
-            jobThread = XxlJobExecutor.registJobThread(triggerParam.getJobId(), jobHandler, removeOldReason);
+            lock.lock();
+            try {
+                if ((jobThread = XxlJobExecutor.loadJobThread(triggerParam.getJobId())) == null) {
+                    // 理论上，这里创建线程的流程是有线程安全问题的，即多个相同id的job同时创建线程
+                    jobThread = XxlJobExecutor.registJobThread(triggerParam.getJobId(), jobHandler, removeOldReason);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
 
         // 同一个任务并发执行时，在一定策略下是会进行排队执行的
