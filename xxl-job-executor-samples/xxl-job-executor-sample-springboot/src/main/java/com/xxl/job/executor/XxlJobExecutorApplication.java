@@ -21,21 +21,24 @@ public class XxlJobExecutorApplication {
         SpringApplication.run(XxlJobExecutorApplication.class, args);
 	}
 
-//	@Component
+	// 方便的测试，测试单机串行和单机并行的任务
+	 @Component
 	public class test implements ApplicationRunner {
 
 		@Override
-		public void run(ApplicationArguments args) throws Exception {
+		public void run(ApplicationArguments args) {
 			ExecutorBiz executorBiz = new ExecutorBizImpl();
-			Thread[] ts = new Thread[3];
-			for (int i=0; i<3; i++) {
+			int count = 10;
+			Thread[] ts = new Thread[count];
+			for (int i=0; i<count; i++) {
 				final int j = i;
 				Thread t = new Thread(() -> {
 					TriggerParam triggerParam = new TriggerParam();
-					triggerParam.setJobId(2);
+					triggerParam.setJobId(j>=5 ? 8 : 2);
 					triggerParam.setExecutorHandler("demoJobHandler");
 					triggerParam.setExecutorParams(null);
-					triggerParam.setExecutorBlockStrategy(ExecutorBlockStrategyEnum.SERIAL_EXECUTION.getTitle());
+					triggerParam.setExecutorBlockStrategy(j >= 5 ? ExecutorBlockStrategyEnum.CONCURRENT_EXECUTION.getTitle()
+							: ExecutorBlockStrategyEnum.SERIAL_EXECUTION.getTitle());
 					triggerParam.setExecutorTimeout(0);
 					triggerParam.setLogId(55+j);
 					triggerParam.setLogDateTime(1618390300000L);

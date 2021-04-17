@@ -5,9 +5,9 @@ import com.xxl.job.core.biz.client.AdminBizClient;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
 import com.xxl.job.core.server.EmbedServer;
-import com.xxl.job.core.thread.JobLogFileCleanThread;
-import com.xxl.job.core.thread.JobThread;
-import com.xxl.job.core.thread.TriggerCallbackThread;
+import com.xxl.job.core.thread.*;
+import com.xxl.job.core.thread.impl.JobExecutor;
+import com.xxl.job.core.thread.impl.JobSingleThread;
 import com.xxl.job.core.util.IpUtil;
 import com.xxl.job.core.util.NetUtil;
 import org.slf4j.Logger;
@@ -90,8 +90,8 @@ public class XxlJobExecutor  {
 
         // destory jobThreadRepository
         if (jobThreadRepository.size() > 0) {
-            for (Map.Entry<Integer, JobThread> item: jobThreadRepository.entrySet()) {
-                JobThread oldJobThread = removeJobThread(item.getKey(), "web container destroy and kill the job.");
+            for (Map.Entry<Integer, AbstractJobExecute> item: jobThreadRepository.entrySet()) {
+                AbstractJobExecute oldJobThread = removeJobThread(item.getKey(), "web container destroy and kill the job.");
                 // wait for job thread push result to callback queue
                 if (oldJobThread != null) {
                     try {
@@ -185,13 +185,21 @@ public class XxlJobExecutor  {
 
 
     // ---------------------- job thread repository ----------------------
-    private static ConcurrentMap<Integer, JobThread> jobThreadRepository = new ConcurrentHashMap<Integer, JobThread>();
-    public static JobThread registJobThread(int jobId, IJobHandler handler, String removeOldReason){
-        JobThread newJobThread = new JobThread(jobId, handler);
+    private static ConcurrentMap<Integer, AbstractJobExecute> jobThreadRepository = new ConcurrentHashMap<Integer, AbstractJobExecute>();
+
+    // 根据isSingle来判断是建单线程模型还是线程池模型
+    public static AbstractJobExecute registJobExecutor(int jobId, IJobHandler handler, String removeOldReason, boolean isSingle) {
+        AbstractJobExecute newJobThread;
+        if (isSingle) {
+            newJobThread = new JobSingleThread(jobId, handler);
+        } else {
+            newJobThread = new JobExecutor(jobId, handler);
+        }
+
         newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
 
-        JobThread oldJobThread = jobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
+        AbstractJobExecute oldJobThread = jobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
         if (oldJobThread != null) {
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
@@ -199,8 +207,14 @@ public class XxlJobExecutor  {
 
         return newJobThread;
     }
-    public static JobThread removeJobThread(int jobId, String removeOldReason){
-        JobThread oldJobThread = jobThreadRepository.remove(jobId);
+
+    // 默认建单线程模型
+    public static AbstractJobExecute registJobThread(int jobId, IJobHandler handler, String removeOldReason){
+        return registJobExecutor(jobId, handler, removeOldReason, true);
+    }
+
+    public static AbstractJobExecute removeJobThread(int jobId, String removeOldReason){
+        AbstractJobExecute oldJobThread = jobThreadRepository.remove(jobId);
         if (oldJobThread != null) {
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
@@ -209,8 +223,9 @@ public class XxlJobExecutor  {
         }
         return null;
     }
-    public static JobThread loadJobThread(int jobId){
-        JobThread jobThread = jobThreadRepository.get(jobId);
+
+    public static AbstractJobExecute loadJobThread(int jobId){
+        AbstractJobExecute jobThread = jobThreadRepository.get(jobId);
         return jobThread;
     }
 

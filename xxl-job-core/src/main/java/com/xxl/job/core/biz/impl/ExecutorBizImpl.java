@@ -10,7 +10,7 @@ import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.impl.GlueJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
-import com.xxl.job.core.thread.JobThread;
+import com.xxl.job.core.thread.AbstractJobExecute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
         // isRunningOrHasQueue
         boolean isRunningOrHasQueue = false;
-        JobThread jobThread = XxlJobExecutor.loadJobThread(idleBeatParam.getJobId());
+        AbstractJobExecute jobThread = XxlJobExecutor.loadJobThread(idleBeatParam.getJobId());
         if (jobThread != null && jobThread.isRunningOrHasQueue()) {
             isRunningOrHasQueue = true;
         }
@@ -49,7 +49,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
     @Override
     public ReturnT<String> run(TriggerParam triggerParam) {
         // load old：jobHandler + jobThread
-        JobThread jobThread = XxlJobExecutor.loadJobThread(triggerParam.getJobId());
+        AbstractJobExecute jobThread = XxlJobExecutor.loadJobThread(triggerParam.getJobId());
         IJobHandler jobHandler = jobThread!=null?jobThread.getHandler():null;
         String removeOldReason = null;
 
@@ -150,7 +150,8 @@ public class ExecutorBizImpl implements ExecutorBiz {
             try {
                 if ((jobThread = XxlJobExecutor.loadJobThread(triggerParam.getJobId())) == null) {
                     // 理论上，这里创建线程的流程是有线程安全问题的，即多个相同id的job同时创建线程
-                    jobThread = XxlJobExecutor.registJobThread(triggerParam.getJobId(), jobHandler, removeOldReason);
+                    jobThread = XxlJobExecutor.registJobExecutor(triggerParam.getJobId(), jobHandler, removeOldReason,
+                            !ExecutorBlockStrategyEnum.CONCURRENT_EXECUTION.getTitle().equals(triggerParam.getExecutorBlockStrategy()));
                 }
             } finally {
                 lock.unlock();
@@ -166,7 +167,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
     @Override
     public ReturnT<String> kill(KillParam killParam) {
         // kill handlerThread, and create new one
-        JobThread jobThread = XxlJobExecutor.loadJobThread(killParam.getJobId());
+        AbstractJobExecute jobThread = XxlJobExecutor.loadJobThread(killParam.getJobId());
         if (jobThread != null) {
             XxlJobExecutor.removeJobThread(killParam.getJobId(), "scheduling center kill job.");
             return ReturnT.SUCCESS;
