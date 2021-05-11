@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by hfc on 2021/4/15.
@@ -14,6 +15,8 @@ import java.util.concurrent.*;
 public class JobExecutor extends AbstractJobExecute {
 
     private static Logger logger = LoggerFactory.getLogger(JobExecutor.class);
+
+    private static AtomicInteger accumulator = new AtomicInteger();
 
     // 用于执行任务的线程池，使该实现可以并行执行
     private ExecutorService executor;
@@ -30,10 +33,10 @@ public class JobExecutor extends AbstractJobExecute {
                 60,
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(500),
-                r -> new Thread(r, "xxl-job-executor-" + r.hashCode()),
+                r -> new Thread(r, "xxl-job-executor-thread-" + accumulator.incrementAndGet()),
                 (r, e) -> {
                     r.run();
-                    logger.warn("xxl-job-executor is EXHAUSTED!");
+                    logger.warn("xxl-job-executor-thread is EXHAUSTED!");
                 });
         super.start();
     }

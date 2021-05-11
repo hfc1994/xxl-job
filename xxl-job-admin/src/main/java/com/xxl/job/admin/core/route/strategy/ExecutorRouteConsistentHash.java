@@ -56,6 +56,10 @@ public class ExecutorRouteConsistentHash extends ExecutorRouter {
         return truncateHashCode;
     }
 
+    /**
+     * 为啥每次都要全量计算一次？ 大概是防止出现节点已掉线但数据还在hash环中的情况
+     * 但是每次都计算也太浪费时间了，hash()里面至少做一个缓存吧...
+     */
     public String hashJob(int jobId, List<String> addressList) {
 
         // ------A1------A2-------A3------

@@ -27,6 +27,7 @@ public class ExecutorRouteRound extends ExecutorRouter {
 
         AtomicInteger count = routeCountEachJob.get(jobId);
         if (count == null || count.get() > 1000000) {
+            // 多点同时部署初始化可能会落在同一节点
             // 初始化时主动Random一次，缓解首次压力
             count = new AtomicInteger(new Random().nextInt(100));
         } else {

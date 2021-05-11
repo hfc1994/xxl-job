@@ -18,6 +18,7 @@ public class ExecutorRouteFailover extends ExecutorRouter {
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
 
         StringBuffer beatResultSB = new StringBuffer();
+        // 如果没有节点掉线，那么和ExecutorRouteFirst没啥区别
         for (String address : addressList) {
             // beat
             ReturnT<String> beatResult = null;

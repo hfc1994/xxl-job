@@ -16,6 +16,7 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by hfc on 2021/4/15.
@@ -23,6 +24,8 @@ import java.util.concurrent.*;
 public abstract class AbstractJobExecute {
 
     private static Logger logger = LoggerFactory.getLogger(AbstractJobExecute.class);
+
+    private static AtomicInteger accumulator = new AtomicInteger();
 
     protected int jobId;
     protected IJobHandler handler;
@@ -150,7 +153,7 @@ public abstract class AbstractJobExecute {
 
             logger.info(">>>>>>>>>>> xxl-job JobExecute stoped, hashCode:{}", Thread.currentThread());
 
-        });
+        }, "xxi-job-thread-" + accumulator.incrementAndGet());
         t.start();
     }
 
